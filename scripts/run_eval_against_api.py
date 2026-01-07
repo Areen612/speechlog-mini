@@ -8,6 +8,25 @@ import requests
 from tqdm import tqdm
 
 
+def load_json_records(path: Path) -> list[dict]:
+    text = path.read_text(encoding="utf-8")
+    if not text.strip():
+        return []
+
+    decoder = json.JSONDecoder()
+    rows: list[dict] = []
+    idx = 0
+    length = len(text)
+    while idx < length:
+        while idx < length and text[idx].isspace():
+            idx += 1
+        if idx >= length:
+            break
+        obj, idx = decoder.raw_decode(text, idx)
+        rows.append(obj)
+    return rows
+
+
 def main(
     manifest_path: str = "data/commonvoice_ar/eval/manifest/commonvoice_ar_validation_50.jsonl",
     api_url: str = "http://127.0.0.1:8000/transcribe",
@@ -20,7 +39,7 @@ def main(
     out_path = out / f"predictions_{ts}.jsonl"
 
     manifest = Path(manifest_path)
-    rows = [json.loads(line) for line in manifest.read_text(encoding="utf-8").splitlines() if line.strip()]
+    rows = load_json_records(manifest)
 
     with out_path.open("w", encoding="utf-8") as f:
         for r in tqdm(rows, desc="Calling /transcribe"):
@@ -38,7 +57,7 @@ def main(
                 "ref_text": r.get("ref_text", ""),
                 "pred": pred,
             }
-            f.write(json.dumps(rec, ensure_ascii=False) + "")
+            f.write(json.dumps(rec, ensure_ascii=False) + "\n")
 
     print(f"✅ Wrote predictions to: {out_path}")
 
