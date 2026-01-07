@@ -6,6 +6,7 @@ from app.vad import SileroVADService
 from app.vas import merge_and_pad_segments
 from app.asr import ASRService
 from app.normalize_ar import normalize_ar
+from app.schemas import HealthResponse, TranscriptionResponse
 
 app = FastAPI()
 ASR: ASRService | None = None
@@ -20,13 +21,13 @@ def startup():
     VAD = SileroVADService(sampling_rate=16000)
 
 
-@app.get("/health")
-def health():
+@app.get("/health", response_model=HealthResponse)
+def health() -> HealthResponse:
     return {"ok": True}
 
 
-@app.post("/transcribe")
-async def transcribe(file: UploadFile = File(...)):
+@app.post("/transcribe", response_model=TranscriptionResponse)
+async def transcribe(file: UploadFile = File(...)) -> TranscriptionResponse:
     if ASR is None or VAD is None:
         raise HTTPException(status_code=503, detail="Models not initialized")
 
