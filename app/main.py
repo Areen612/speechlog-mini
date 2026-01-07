@@ -1,4 +1,5 @@
 import time
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, UploadFile, File, HTTPException
 
 from app.audio_io import load_and_preprocess
@@ -8,17 +9,19 @@ from app.asr import ASRService
 from app.normalize_ar import normalize_ar
 from app.schemas import HealthResponse, TranscriptionResponse
 
-app = FastAPI()
 ASR: ASRService | None = None
 VAD: SileroVADService | None = None
 
 
-@app.on_event("startup")
-def startup():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     global ASR, VAD
     ASR = ASRService(model_size="base")
-    # Silero VAD is lightweight; keep it loaded
     VAD = SileroVADService(sampling_rate=16000)
+    yield
+
+
+app = FastAPI(lifespan=lifespan)
 
 
 @app.get("/health", response_model=HealthResponse)
