@@ -59,7 +59,7 @@ speechlog-mini/
 ---
 
 ## Requirements
-- Python 3.11+
+- Python 3.11 or 3.12 (3.13+ is not supported by numba/llvmlite yet)
 - Poetry
 - ffmpeg (recommended for broader audio format support)
 
@@ -170,6 +170,9 @@ If latency is high:
 - Ensure models load once at startup (not per request)
 - Reduce segment count (merge more or tune segmentation)
 - Try a smaller Whisper model (`tiny` or `base`)
+
+If `poetry add` fails for `librosa`/`numba` on macOS:
+- Make sure the Poetry environment uses Python 3.11 or 3.12
 
 ---
 
